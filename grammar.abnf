@@ -13,7 +13,7 @@ comment     = ";[^\n]*\n"
 _           = "[ \t\r\n]*" [comment _]
 ident       = "(?![0-9])[0-9a-zA-Z\-_]+"
 number      = "[0-9]+"
-string      = "\"(\\"|[^\"\r\n])*\""
+string      = "\"((?:\\"|[^\"\r\n])*)\""
 repeat      = "\+"
             / "\*" [number]
             / number ["\*" [number]]
@@ -23,10 +23,10 @@ patatom     = ident !(_ "=")
             / "\(" _ patchoice _ "\)"
             / "\(\)"
 patops      = repeat _ patatom
-            / "&" patatom
-            / "!" patatom
+            / "&"  patatom
+            / "!"  patatom
             / patatom
 patlist     = patops *(_ patops)
 patchoice   = patlist *(_ "/" _ patlist)
 decl        = ident _ "=" _ patchoice
-decl_list   = _ [decl *(_ decl)] _
+decl-list   = _ [decl *(_ decl)] _

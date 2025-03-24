@@ -1,5 +1,9 @@
 Convert ABNF like PEG declaration to JSON
 
+## Operators
+- `&` Positive lookahead
+- `!` Negative lookahead
+
 # Examples
 ```
 $ cat ./grammar.abnf
