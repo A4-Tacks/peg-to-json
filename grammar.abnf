@@ -9,10 +9,10 @@
 ;; syn match abnfEscape /\\"/ contained containedin=abnfString
 ;; hi link abnfEscape Special
 
-comment     = ";[^\n]*\n"
-_           = "[ \t\r\n]*" [comment _]
-ident       = "(?![0-9])[0-9a-zA-Z\-_]+"
-number      = "[0-9]+"
+comment     = ~";[^\n]*\n" @comment
+_           = ~"[ \t\r\n]*" [comment _]
+ident       = ~"(?![0-9])[0-9a-zA-Z\-_]+" @ident
+number      = ~"[0-9]+" @number
 string      = "\"((?:\\"|[^\"\r\n])*)\""
 repeat      = "\+"
             / "\*" [number]
@@ -21,12 +21,15 @@ patatom     = ident !(_ "=")
             / string
             / "\[" _ patchoice _ "\]"
             / "\(" _ patchoice _ "\)"
-            / "\(\)"
+            / "\(\)"        ; empty pattern
 patops      = repeat _ patatom
-            / "&"  patatom
-            / "!"  patatom
+            / "&"  patatom  ; positive lookahead
+            / "!"  patatom  ; negative lookahead
+            / "~"  patatom  ; quiet
+            / "\$" patatom  ; slice
             / patatom
 patlist     = patops *(_ patops)
 patchoice   = patlist *(_ "/" _ patlist)
+              [_ "@" (ident / string)]  ; extra expected branch
 decl        = ident _ "=" _ patchoice
-decl-list   = _ [decl *(_ decl)] _
+decl-list   = _ decl *(_ decl) _

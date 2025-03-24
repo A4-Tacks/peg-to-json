@@ -56,6 +56,8 @@ peg::parser!(pub grammar parser() for str {
         }
         / "&" p:patatom() { json::object! { look: p } }
         / "!" p:patatom() { json::object! { look: p, invert: true } }
+        / "~" p:patatom() { json::object! { quiet: p } }
+        / "$" p:patatom() { json::object! { slice: p } }
         / patatom()
     rule patlist() -> JsonValue
         = ops:patops() ++ _
@@ -68,7 +70,12 @@ peg::parser!(pub grammar parser() for str {
         }
     rule patchoice() -> JsonValue
         = ops:patlist() ++ (_ "/" _)
+          exp:(_ "@" s:(ident() / string()) {s})?
         {
+            let mut ops = ops;
+            if let Some(exp) = exp {
+                ops.push(json::object! { expected: exp })
+            }
             if ops.len() == 1 {
                 ops.into_iter().next().unwrap()
             } else {
@@ -81,7 +88,7 @@ peg::parser!(pub grammar parser() for str {
         = k:ident() _ "=" _ c:patchoice() { (k, c) }
     pub
     rule decl_list() -> JsonValue
-        = _ decls:trace(<decl()**_>) _
+        = _ decls:trace(<decl()++_>) _
         {
             json::object::Object::from_iter(decls).into()
         }

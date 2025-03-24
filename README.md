@@ -3,6 +3,8 @@ Convert ABNF like PEG declaration to JSON
 ## Operators
 - `&` Positive lookahead
 - `!` Negative lookahead
+- `~` Quiet pattern
+- `$` Slice pattern
 
 # Examples
 ```
