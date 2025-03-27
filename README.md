@@ -10,18 +10,29 @@ Convert ABNF like PEG declaration to JSON
 ```
 $ cat ./grammar.abnf
 ...
-comment     = ";[^\n]*\n"
-_           = "[ \t\r\n]*" [comment _]
-ident       = "(?![0-9])[0-9a-zA-Z\-_]+"
+comment     = ~<;[^\n]*\n> @comment
+_           = ~<[ \t\r\n]*> [comment _]
+ident       = ~<(?![0-9])[0-9a-zA-Z\-_]+> @ident
 ...
 $ cargo run -- < grammar.abnf
 {
   "comment": {
-    "match": ";[^\\n]*\\n"
+    "choice": [
+      {
+        "quiet": {
+          "match": ";[^\\n]*\\n"
+        }
+      },
+      {
+        "expected": "comment"
+      }
+    ]
   },
   "_": [
     {
-      "match": "[ \\t\\r\\n]*"
+      "quiet": {
+        "match": "[ \\t\\r\\n]*"
+      }
     },
     {
       "optional": [
@@ -31,7 +42,16 @@ $ cargo run -- < grammar.abnf
     }
   ],
   "ident": {
-    "match": "(?![0-9])[0-9a-zA-Z\\-_]+"
+    "choice": [
+      {
+        "quiet": {
+          "match": "(?![0-9])[0-9a-zA-Z\\-_]+"
+        }
+      },
+      {
+        "expected": "ident"
+      }
+    ]
   },
 ...
 ```

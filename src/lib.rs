@@ -28,9 +28,17 @@ peg::parser!(pub grammar parser() for str {
         / expected!("number")
     rule string() -> String
         = quiet!{
-            "\"" s:("\\\"" {"\""} / $([^'"' | '\r' | '\n']))* "\""
-            { s.concat() }
+            "\"" s:$([^'"' | '\r' | '\n']*) "\""
+            { s.to_owned() }
         } / expected!("string")
+    rule r#match() -> String
+        = quiet!{
+            "<" s:$([^'>' | '\r' | '\n']*) ">"
+            { s.to_owned() }
+        } / expected!("string")
+    rule label() -> String
+        = ident()
+        / string()
     rule repeat() -> (u32, Option<Option<u32>>)
         = "+" { (1, Some(None)) }
         / "*" to:number()? { (0, Some(to)) }
@@ -38,10 +46,11 @@ peg::parser!(pub grammar parser() for str {
 
     rule patatom() -> JsonValue
         = i:ident() !(_ "=") { i.into() }
-        / s:string() { json::object! {match: s} }
+        / s:string() { json::object! {keyword: s} }
+        / s:r#match() { json::object! {match: s} }
         / "[" _ c:patchoice() _ "]" { json::object! {optional: c} }
         / "(" _ c:patchoice() _ ")" { c }
-        / "()" { json::array![] }
+        / "{" _ c:patchoice() _ "}" { json::object! {scope: c} }
     rule patops() -> JsonValue
         = r:repeat() _ p:patatom() {
             let (base, to) = r;
